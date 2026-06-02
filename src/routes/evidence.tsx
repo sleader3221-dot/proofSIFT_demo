@@ -27,19 +27,15 @@ function statusStroke(s: Claim["status"]) {
 }
 
 // ---------------- Evidence Graph (SVG) ----------------
-function EvidenceGraph({
-  selected,
-  onSelect,
-}: {
-  selected: Claim;
-  onSelect: (c: Claim) => void;
-}) {
+function EvidenceGraph({ selected, onSelect }: { selected: Claim; onSelect: (c: Claim) => void }) {
   // Collect unique sources (left column) in stable order of first appearance.
   const sources = useMemo(() => {
     const order: string[] = [];
-    claims.forEach((c) => c.evidence.forEach((e) => {
-      if (!order.includes(e.source)) order.push(e.source);
-    }));
+    claims.forEach((c) =>
+      c.evidence.forEach((e) => {
+        if (!order.includes(e.source)) order.push(e.source);
+      }),
+    );
     return order;
   }, []);
 
@@ -62,7 +58,13 @@ function EvidenceGraph({
       <svg viewBox={`0 0 ${W} ${height}`} className="block w-full" style={{ minWidth: 680 }}>
         <defs>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="var(--border)" strokeOpacity="0.25" strokeWidth="0.5" />
+            <path
+              d="M 20 0 L 0 0 0 20"
+              fill="none"
+              stroke="var(--border)"
+              strokeOpacity="0.25"
+              strokeWidth="0.5"
+            />
           </pattern>
         </defs>
         <rect width={W} height={height} fill="url(#grid)" />
@@ -105,7 +107,9 @@ function EvidenceGraph({
                 width={SRC_W}
                 height={24}
                 rx={4}
-                fill={active ? "color-mix(in oklab, var(--confirmed) 12%, transparent)" : "var(--card)"}
+                fill={
+                  active ? "color-mix(in oklab, var(--confirmed) 12%, transparent)" : "var(--card)"
+                }
                 stroke={active ? "var(--confirmed)" : "var(--border)"}
                 strokeOpacity={active ? 0.9 : 0.6}
               />
@@ -137,23 +141,45 @@ function EvidenceGraph({
                 width={CLAIM_W}
                 height={24}
                 rx={4}
-                fill={isActive ? "color-mix(in oklab, " + stroke + " 16%, transparent)" : "var(--card)"}
+                fill={
+                  isActive ? "color-mix(in oklab, " + stroke + " 16%, transparent)" : "var(--card)"
+                }
                 stroke={stroke}
                 strokeOpacity={isActive ? 1 : 0.45}
                 strokeWidth={isActive ? 1.5 : 1}
               />
-              <text x={10} y={16} fontFamily="ui-monospace, monospace" fontSize={11} fill="var(--foreground)">
-                {c.id.slice(0, 14)}…  ·  conf {c.confidence.toFixed(2)}
+              <text
+                x={10}
+                y={16}
+                fontFamily="ui-monospace, monospace"
+                fontSize={11}
+                fill="var(--foreground)"
+              >
+                {c.id.slice(0, 14)}… · conf {c.confidence.toFixed(2)}
               </text>
             </g>
           );
         })}
 
         {/* Column headers */}
-        <text x={LEFT_X} y={14} fontFamily="ui-monospace, monospace" fontSize={9} fill="var(--muted-foreground)" letterSpacing="2">
+        <text
+          x={LEFT_X}
+          y={14}
+          fontFamily="ui-monospace, monospace"
+          fontSize={9}
+          fill="var(--muted-foreground)"
+          letterSpacing="2"
+        >
           TOOL SOURCES
         </text>
-        <text x={RIGHT_X - CLAIM_W} y={14} fontFamily="ui-monospace, monospace" fontSize={9} fill="var(--muted-foreground)" letterSpacing="2">
+        <text
+          x={RIGHT_X - CLAIM_W}
+          y={14}
+          fontFamily="ui-monospace, monospace"
+          fontSize={9}
+          fill="var(--muted-foreground)"
+          letterSpacing="2"
+        >
           CLAIMS
         </text>
       </svg>
@@ -194,15 +220,20 @@ function EvidencePage() {
     }
   }, [scopeToClaim, activeTab, allRows, activeSources, selected]);
 
-  const cols = (rows[0] ? Object.keys(rows[0]) : allRows[0] ? Object.keys(allRows[0]) : []) as string[];
+  const cols = (
+    rows[0] ? Object.keys(rows[0]) : allRows[0] ? Object.keys(allRows[0]) : []
+  ) as string[];
 
   return (
     <div className="space-y-6 p-6">
       <div>
-        <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-confirmed">// evidence graph browser</div>
+        <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-confirmed">
+          // evidence graph browser
+        </div>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">SQLite Provenance Store</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Every artifact, tool run, and claim is traceable to a parser command and an evidence hash. Click any node or row to isolate its corroboration chain.
+          Every artifact, tool run, and claim is traceable to a parser command and an evidence hash.
+          Click any node or row to isolate its corroboration chain.
         </p>
       </div>
 
@@ -221,7 +252,11 @@ function EvidencePage() {
       </Panel>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_1fr]">
-        <Panel title="claim investigator" subtitle="Select a claim to isolate its corroboration chain" accent="confirmed">
+        <Panel
+          title="claim investigator"
+          subtitle="Select a claim to isolate its corroboration chain"
+          accent="confirmed"
+        >
           <ul className="space-y-2">
             {claims.map((c) => (
               <li key={c.id}>
@@ -232,7 +267,12 @@ function EvidencePage() {
                     selected.id === c.id ? "border-confirmed/60 bg-confirmed/5" : "border-border",
                   )}
                 >
-                  <span className={cn("inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest", statusClass(c.status))}>
+                  <span
+                    className={cn(
+                      "inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest",
+                      statusClass(c.status),
+                    )}
+                  >
                     {c.status}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -240,7 +280,9 @@ function EvidencePage() {
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                       <span>{c.id}</span>
                       <span className="text-confirmed">conf {c.confidence.toFixed(2)}</span>
-                      {c.mitre.map((m) => <span key={m}>{m}</span>)}
+                      {c.mitre.map((m) => (
+                        <span key={m}>{m}</span>
+                      ))}
                     </div>
                   </div>
                   <ArrowRight className="mt-1 h-3.5 w-3.5 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-confirmed" />
@@ -253,23 +295,47 @@ function EvidencePage() {
         <Panel
           title="corroboration chain"
           subtitle={selected.title}
-          accent={selected.status.startsWith("CONFIRMED") ? "confirmed" : selected.status.startsWith("INFERRED") ? "inferred" : undefined}
+          accent={
+            selected.status.startsWith("CONFIRMED")
+              ? "confirmed"
+              : selected.status.startsWith("INFERRED")
+                ? "inferred"
+                : undefined
+          }
         >
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className={cn("rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest", statusClass(selected.status))}>
+            <span
+              className={cn(
+                "rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest",
+                statusClass(selected.status),
+              )}
+            >
               {selected.status}
             </span>
-            <span className="font-mono text-[11px] text-muted-foreground">confidence {selected.confidence.toFixed(2)}</span>
-            <span className="font-mono text-[11px] text-muted-foreground">severity {selected.severity}</span>
+            <span className="font-mono text-[11px] text-muted-foreground">
+              confidence {selected.confidence.toFixed(2)}
+            </span>
+            <span className="font-mono text-[11px] text-muted-foreground">
+              severity {selected.severity}
+            </span>
             {selected.mitre.map((m) => (
-              <span key={m} className="rounded border border-border bg-muted/30 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+              <span
+                key={m}
+                className="rounded border border-border bg-muted/30 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
+              >
                 {m}
               </span>
             ))}
           </div>
           {selected.note && (
-            <div className={cn("mb-4 rounded-md border p-3 text-xs",
-              selected.status.startsWith("INFERRED") ? "border-inferred/50 bg-inferred/10 text-inferred" : "border-border bg-muted/30 text-muted-foreground")}>
+            <div
+              className={cn(
+                "mb-4 rounded-md border p-3 text-xs",
+                selected.status.startsWith("INFERRED")
+                  ? "border-inferred/50 bg-inferred/10 text-inferred"
+                  : "border-border bg-muted/30 text-muted-foreground",
+              )}
+            >
               {selected.note}
             </div>
           )}
@@ -285,7 +351,9 @@ function EvidencePage() {
               <tbody>
                 {selected.evidence.map((e, i) => (
                   <tr key={i} className="border-t border-border/60">
-                    <td className="px-3 py-2 font-mono text-[11px] text-muted-foreground">{i + 1}</td>
+                    <td className="px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                      {i + 1}
+                    </td>
                     <td className="px-3 py-2 font-mono text-xs text-confirmed">{e.source}</td>
                     <td className="px-3 py-2 text-foreground">{e.detail}</td>
                   </tr>
@@ -325,21 +393,35 @@ function EvidencePage() {
               onClick={() => setActiveTab(t)}
               className={cn(
                 "rounded-md border px-3 py-1 font-mono text-[11px] uppercase tracking-widest transition",
-                activeTab === t ? "border-confirmed bg-confirmed/10 text-confirmed" : "border-border text-muted-foreground hover:text-foreground",
+                activeTab === t
+                  ? "border-confirmed bg-confirmed/10 text-confirmed"
+                  : "border-border text-muted-foreground hover:text-foreground",
               )}
-            >{t}</button>
+            >
+              {t}
+            </button>
           ))}
         </div>
         <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              <tr>{cols.map((c) => <th key={c} className="px-3 py-2 text-left">{c}</th>)}</tr>
+              <tr>
+                {cols.map((c) => (
+                  <th key={c} className="px-3 py-2 text-left">
+                    {c}
+                  </th>
+                ))}
+              </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={cols.length || 1} className="px-3 py-6 text-center font-mono text-xs text-muted-foreground">
-                    no rows in <span className="text-foreground">{activeTab}</span> intersect the selected claim's chain — toggle "all rows" to view the full table
+                  <td
+                    colSpan={cols.length || 1}
+                    className="px-3 py-6 text-center font-mono text-xs text-muted-foreground"
+                  >
+                    no rows in <span className="text-foreground">{activeTab}</span> intersect the
+                    selected claim's chain — toggle "all rows" to view the full table
                   </td>
                 </tr>
               ) : (
@@ -357,7 +439,8 @@ function EvidencePage() {
           </table>
         </div>
         <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          {rows.length} / {allRows.length} rows · table <span className="text-confirmed">{activeTab}</span>
+          {rows.length} / {allRows.length} rows · table{" "}
+          <span className="text-confirmed">{activeTab}</span>
         </div>
       </Panel>
     </div>

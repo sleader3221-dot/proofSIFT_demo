@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as ReportRouteImport } from './routes/report'
 import { Route as MitreRouteImport } from './routes/mitre'
+import { Route as GraphRouteImport } from './routes/graph'
 import { Route as EvidenceRouteImport } from './routes/evidence'
 import { Route as BenchmarkRouteImport } from './routes/benchmark'
 import { Route as AuditRouteImport } from './routes/audit'
@@ -31,6 +32,11 @@ const ReportRoute = ReportRouteImport.update({
 const MitreRoute = MitreRouteImport.update({
   id: '/mitre',
   path: '/mitre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GraphRoute = GraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EvidenceRoute = EvidenceRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/audit': typeof AuditRoute
   '/benchmark': typeof BenchmarkRoute
   '/evidence': typeof EvidenceRoute
+  '/graph': typeof GraphRoute
   '/mitre': typeof MitreRoute
   '/report': typeof ReportRoute
   '/tools': typeof ToolsRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/audit': typeof AuditRoute
   '/benchmark': typeof BenchmarkRoute
   '/evidence': typeof EvidenceRoute
+  '/graph': typeof GraphRoute
   '/mitre': typeof MitreRoute
   '/report': typeof ReportRoute
   '/tools': typeof ToolsRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/audit': typeof AuditRoute
   '/benchmark': typeof BenchmarkRoute
   '/evidence': typeof EvidenceRoute
+  '/graph': typeof GraphRoute
   '/mitre': typeof MitreRoute
   '/report': typeof ReportRoute
   '/tools': typeof ToolsRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/benchmark'
     | '/evidence'
+    | '/graph'
     | '/mitre'
     | '/report'
     | '/tools'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/benchmark'
     | '/evidence'
+    | '/graph'
     | '/mitre'
     | '/report'
     | '/tools'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/benchmark'
     | '/evidence'
+    | '/graph'
     | '/mitre'
     | '/report'
     | '/tools'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   AuditRoute: typeof AuditRoute
   BenchmarkRoute: typeof BenchmarkRoute
   EvidenceRoute: typeof EvidenceRoute
+  GraphRoute: typeof GraphRoute
   MitreRoute: typeof MitreRoute
   ReportRoute: typeof ReportRoute
   ToolsRoute: typeof ToolsRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/mitre'
       fullPath: '/mitre'
       preLoaderRoute: typeof MitreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/graph': {
+      id: '/graph'
+      path: '/graph'
+      fullPath: '/graph'
+      preLoaderRoute: typeof GraphRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/evidence': {
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuditRoute: AuditRoute,
   BenchmarkRoute: BenchmarkRoute,
   EvidenceRoute: EvidenceRoute,
+  GraphRoute: GraphRoute,
   MitreRoute: MitreRoute,
   ReportRoute: ReportRoute,
   ToolsRoute: ToolsRoute,

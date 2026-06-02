@@ -1,12 +1,32 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, Network, Gauge, FileText, ShieldCheck, GitBranch, Workflow, ScrollText, Wrench } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter,
+  Activity,
+  Network,
+  Gauge,
+  FileText,
+  ShieldCheck,
+  GitBranch,
+  Workflow,
+  ScrollText,
+  Wrench,
+  Share2,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 
 const operations = [
   { title: "Dashboard & Triage", url: "/", icon: Activity },
+  { title: "Force Graph", url: "/graph", icon: Share2 },
   { title: "Evidence Graph", url: "/evidence", icon: Network },
   { title: "Architecture & Timeline", url: "/architecture", icon: Workflow },
 ];
@@ -34,8 +54,12 @@ export function AppSidebar() {
             <ShieldCheck className="h-4 w-4 text-confirmed" />
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="font-mono text-sm font-semibold tracking-wider text-foreground">ProofSIFT</span>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">DFIR Control Room</span>
+            <span className="font-mono text-sm font-semibold tracking-wider text-foreground">
+              ProofSIFT
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              DFIR Control Room
+            </span>
           </div>
         </div>
       </SidebarHeader>

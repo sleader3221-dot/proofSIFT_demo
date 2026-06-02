@@ -23,7 +23,10 @@ export function LiveTerminal() {
     const id = setInterval(() => {
       setLines((prev) => [...prev, terminalScript[i]]);
       i += 1;
-      if (i >= terminalScript.length) { clearInterval(id); setRunning(false); }
+      if (i >= terminalScript.length) {
+        clearInterval(id);
+        setRunning(false);
+      }
     }, 220);
     return () => clearInterval(id);
   }, [running]);
@@ -52,17 +55,35 @@ export function LiveTerminal() {
               : "border-confirmed/50 bg-confirmed/10 text-confirmed hover:bg-confirmed/20",
           )}
         >
-          {running ? <><Square className="h-3 w-3" /> running</> : <><Play className="h-3 w-3" /> run live case</>}
+          {running ? (
+            <>
+              <Square className="h-3 w-3" /> running
+            </>
+          ) : (
+            <>
+              <Play className="h-3 w-3" /> run live case
+            </>
+          )}
         </button>
       </div>
-      <div ref={scrollRef} className="h-[420px] overflow-auto px-4 py-3 font-mono text-[12.5px] leading-relaxed">
+      <div
+        ref={scrollRef}
+        className="h-[420px] overflow-auto px-4 py-3 font-mono text-[12.5px] leading-relaxed"
+      >
         {lines.length === 0 && !running && (
-          <p className="text-muted-foreground">$ click <span className="text-confirmed">"run live case"</span> to stream the self-correcting investigator…</p>
+          <p className="text-muted-foreground">
+            $ click <span className="text-confirmed">"run live case"</span> to stream the
+            self-correcting investigator…
+          </p>
         )}
         {lines.map((l, idx) => (
-          <div key={idx} className={cn("whitespace-pre", toneClass[l.tone ?? "dim"])}>{l.text || "\u00a0"}</div>
+          <div key={idx} className={cn("whitespace-pre", toneClass[l.tone ?? "dim"])}>
+            {l.text || "\u00a0"}
+          </div>
         ))}
-        {running && <span className="inline-block h-3 w-2 bg-confirmed align-middle animate-blink" />}
+        {running && (
+          <span className="inline-block h-3 w-2 bg-confirmed align-middle animate-blink" />
+        )}
       </div>
     </div>
   );
