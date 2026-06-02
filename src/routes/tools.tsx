@@ -41,19 +41,32 @@ const categoryAccent: Record<string, string> = {
 };
 
 function CopyBtn({ text }: { text: string }) {
-  const [done, setDone] = useState(false);
+  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+
+  async function handleCopy() {
+    try {
+      if (!navigator.clipboard) throw new Error("Clipboard API unavailable");
+      await navigator.clipboard.writeText(text);
+      setStatus("copied");
+    } catch {
+      setStatus("failed");
+    } finally {
+      window.setTimeout(() => setStatus("idle"), 1400);
+    }
+  }
+
   return (
     <button
-      onClick={() => {
-        navigator.clipboard?.writeText(text);
-        setDone(true);
-        setTimeout(() => setDone(false), 1200);
-      }}
+      onClick={handleCopy}
       className="inline-flex items-center gap-1 rounded border border-border bg-background/50 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition hover:text-confirmed"
     >
-      {done ? (
+      {status === "copied" ? (
         <>
           <Check className="h-3 w-3 text-confirmed" /> copied
+        </>
+      ) : status === "failed" ? (
+        <>
+          <Copy className="h-3 w-3 text-blocked" /> failed
         </>
       ) : (
         <>

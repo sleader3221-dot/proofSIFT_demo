@@ -13,6 +13,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { LiveUtcClock } from "@/components/LiveUtcClock";
 
 function NotFoundComponent() {
   return (
@@ -99,8 +100,11 @@ function RootComponent() {
                 <span className="h-1.5 w-1.5 rounded-full bg-confirmed animate-pulse" />
                 live · self-correcting investigator
               </div>
-              <div className="ml-auto font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                SANS Find Evil · v1.0
+              <div className="ml-auto flex items-center gap-3">
+                <LiveUtcClock />
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  SANS Find Evil · v1.0
+                </span>
               </div>
             </header>
             <main className="flex-1">

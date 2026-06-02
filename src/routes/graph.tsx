@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { drag } from "d3-drag";
 import {
-  drag,
   forceCenter,
   forceCollide,
   forceLink,
   forceManyBody,
   forceSimulation,
-  select,
   type SimulationLinkDatum,
   type SimulationNodeDatum,
-} from "d3";
-import { Database, FileCode, Fingerprint, Network, ShieldAlert } from "lucide-react";
+} from "d3-force";
+import { select } from "d3-selection";
+import { Database, Download, FileCode, Fingerprint, Network, ShieldAlert } from "lucide-react";
 import { Panel } from "@/components/Panel";
 import { cn } from "@/lib/utils";
+import { downloadTextFile } from "@/lib/download";
 
 export const Route = createFileRoute("/graph")({
   head: () => ({ meta: [{ title: "Force Graph · ProofSIFT" }] }),
@@ -257,6 +258,49 @@ function ForceGraph({ onSelect }: { onSelect: (node: EvidenceNode) => void }) {
   );
 }
 
+const graphExport = {
+  case_id: "proofsift-demo-001",
+  generated_by: "ProofSIFT demo force graph",
+  nodes: [
+    {
+      id: "evil.exe",
+      kind: "process",
+      artifact_id: "proc-1888",
+      sha256: "9f3c2b01...b201",
+      status: "CONFIRMED_CRITICAL",
+    },
+    {
+      id: "203.0.113.50",
+      kind: "network",
+      artifact_id: "net-203-443",
+      source: "memory_netscan",
+      remote_port: 443,
+    },
+    {
+      id: "HKCU\\Run",
+      kind: "registry",
+      artifact_id: "reg-updater",
+      value: "Updater",
+      data: "C:\\Users\\Public\\evil.exe",
+    },
+    {
+      id: "EVIL.EXE-9A8B7C6D.pf",
+      kind: "prefetch",
+      artifact_id: "pf-evil-9a8b7c6d",
+      execution_count: 3,
+    },
+  ],
+  edges: [
+    { source: "evil.exe", target: "203.0.113.50", relation: "beaconed_to" },
+    { source: "evil.exe", target: "HKCU\\Run", relation: "persisted_by" },
+    { source: "evil.exe", target: "EVIL.EXE-9A8B7C6D.pf", relation: "executed_as" },
+  ],
+};
+
+function downloadJson(filename: string, payload: unknown) {
+  downloadTextFile(filename, `${JSON.stringify(payload, null, 2)}\n`, "application/json");
+}
+
 function GraphPage() {
   const [selected, setSelected] = useState<EvidenceNode | null>(null);
   const Icon = selected ? nodeIcon(selected.kind) : Fingerprint;
@@ -281,6 +325,14 @@ function GraphPage() {
           title="live graph canvas"
           subtitle="D3 force simulation · draggable artifacts"
           accent="confirmed"
+          action={
+            <button
+              onClick={() => downloadJson("proofsift-demo-001-force-graph.json", graphExport)}
+              className="inline-flex items-center gap-2 rounded-md border border-confirmed/50 bg-confirmed/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-confirmed transition hover:bg-confirmed/20"
+            >
+              <Download className="h-3 w-3" /> graph json
+            </button>
+          }
         >
           <ForceGraph onSelect={setSelected} />
           <div className="mt-3 flex flex-wrap gap-2">
@@ -316,6 +368,17 @@ function GraphPage() {
               >
                 <Icon className="h-3.5 w-3.5" /> {selected.kind}
               </div>
+              <button
+                onClick={() =>
+                  downloadJson(
+                    `proofsift-demo-001-${selected.id.replace(/[^a-z0-9.-]+/gi, "-")}.json`,
+                    selected.artifact,
+                  )
+                }
+                className="inline-flex items-center gap-2 rounded-md border border-border bg-background/50 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition hover:border-confirmed/50 hover:text-confirmed"
+              >
+                <Download className="h-3 w-3" /> selected artifact json
+              </button>
               <pre className="max-h-[440px] overflow-auto rounded-md border border-border bg-[var(--terminal-bg)] p-4 font-mono text-xs leading-relaxed text-foreground">
                 {JSON.stringify(selected.artifact, null, 2)}
               </pre>

@@ -1,11 +1,142 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Panel } from "@/components/Panel";
-import { Download, ShieldCheck } from "lucide-react";
+import { Download, FileJson, ShieldCheck } from "lucide-react";
+import { downloadTextFile } from "@/lib/download";
 
 export const Route = createFileRoute("/report")({
   head: () => ({ meta: [{ title: "Forensic Report · ProofSIFT" }] }),
   component: ReportPage,
 });
+
+function buildReportMarkdown(generatedAtUtc: string) {
+  return `# ProofSIFT Forensic Investigation Report
+
+Generated: ${generatedAtUtc}
+Case: proofsift-demo-001
+Analyst: ProofSIFT Autonomous Investigator v1.0
+
+## 1. Executive Summary
+
+On 2024-08-14 14:02-14:12 UTC, the autonomous ProofSIFT investigator confirmed an active command-and-control compromise on the subject host. The malicious binary evil.exe (SHA-256 9f3c...b201) was staged by powershell.exe, persisted through HKCU\\Run\\Updater, executed three times, and communicated with C2 endpoint 203.0.113.50:443.
+
+Evidence integrity remained 100% intact. SafePathPolicy blocked two spoliation attempts.
+
+## 2. Confirmed Findings
+
+1. evil.exe -> C2 203.0.113.50:443
+   - Status: CONFIRMED - CRITICAL
+   - Confidence: 0.93
+   - Evidence: memory_netscan, disk_prefetch, disk_amcache, timeline_mft, memory_malfind
+   - MITRE: T1071.001, T1055, T1547.001
+
+2. Registry persistence - HKCU\\Run\\Updater
+   - Status: CONFIRMED - CRITICAL
+   - Confidence: 0.91
+   - Evidence: registry_autoruns + disk_amcache SHA match
+   - MITRE: T1547.001
+
+3. PowerShell parent-child staging
+   - Status: CONFIRMED - CRITICAL
+   - Confidence: 0.74
+   - Evidence: windows_process_creation + disk_prefetch + yara_keyword_scan
+   - MITRE: T1059.001, T1105
+
+## 3. Inferred / Capped
+
+unknown.exe -> 198.51.100.24 remains INFERRED - HIGH because no matching disk execution evidence (prefetch/amcache) corroborates the network signal.
+
+## 4. Anti-Forensics and Clock Drift
+
+- EVTX vs memory_netscan: +120s raw clock skew normalized against the Netscan anchor.
+- evil.exe MFT STANDARD_INFORMATION created timestamp (14:10:05Z) appears after modified timestamp (14:02:05Z), so timestomping was flagged with a 1.12x confidence multiplier.
+
+## 5. Integrity and Spoliation
+
+- SafePathPolicy blocked 2 unsanctioned write attempts targeting /case/evidence/mft.csv.
+- SHA-256 chain re-verified with 0 evidence modifications.
+- Audit hash: 9f3c2b01...44ae.
+
+## 6. Recommendations
+
+1. Block egress to 203.0.113.50/32 and 198.51.100.24/32 at the perimeter.
+2. Quarantine the host; preserve memory image and MFT.
+3. Remove HKCU\\Run\\Updater; rotate credentials for the affected user.
+4. Acquire full disk image for unknown.exe corroboration.
+`;
+}
+
+function buildEvidencePackage(generatedAtUtc: string) {
+  return {
+    case_id: "proofsift-demo-001",
+    generated_at_utc: generatedAtUtc,
+    integrity: {
+      safe_path_policy: "read=evidence/, write=outputs/",
+      spoliation_attempts_blocked: 2,
+      evidence_modifications: 0,
+      audit_hash: "9f3c2b01...44ae",
+    },
+    confirmed_findings: [
+      {
+        id: "clm-3c76c94c3ce5",
+        title: "evil.exe communicated with known C2 indicator 203.0.113.50:443",
+        status: "CONFIRMED - CRITICAL",
+        confidence: 0.93,
+        evidence: [
+          "memory_netscan",
+          "disk_prefetch",
+          "disk_amcache",
+          "timeline_mft",
+          "memory_malfind",
+        ],
+      },
+      {
+        id: "clm-7f01a2b9c4d1",
+        title: "Registry persistence: HKCU\\Run\\Updater -> evil.exe",
+        status: "CONFIRMED - CRITICAL",
+        confidence: 0.91,
+        evidence: ["registry_autoruns", "disk_amcache"],
+      },
+      {
+        id: "clm-55c1ee84a020",
+        title: "PowerShell staged evil.exe",
+        status: "CONFIRMED - CRITICAL",
+        confidence: 0.74,
+        evidence: ["windows_process_creation", "disk_prefetch", "yara_keyword_scan"],
+      },
+    ],
+    clock_drift: {
+      source: "EVTX",
+      reference: "memory_netscan",
+      raw_offset_seconds: 120,
+      normalization: "EVTX timestamps shifted -120s to align with Netscan anchor",
+    },
+    anti_forensics: [
+      {
+        target: "evil.exe",
+        anomaly: "MFT created timestamp appears after modified/execution evidence",
+        multiplier: 1.12,
+      },
+    ],
+  };
+}
+
+function downloadReportMarkdown() {
+  const generatedAtUtc = new Date().toISOString();
+  downloadTextFile(
+    "proofsift-demo-001-forensic-report.md",
+    buildReportMarkdown(generatedAtUtc),
+    "text/markdown",
+  );
+}
+
+function downloadEvidenceJson() {
+  const generatedAtUtc = new Date().toISOString();
+  downloadTextFile(
+    "proofsift-demo-001-evidence-package.json",
+    `${JSON.stringify(buildEvidencePackage(generatedAtUtc), null, 2)}\n`,
+    "application/json",
+  );
+}
 
 function ReportPage() {
   return (
@@ -22,9 +153,20 @@ function ReportPage() {
             Case proofsift-demo-001 — ready for CISO &amp; court submission.
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 rounded-md border border-confirmed/50 bg-confirmed/10 px-4 py-2 font-mono text-xs uppercase tracking-widest text-confirmed hover:bg-confirmed/20">
-          <Download className="h-3.5 w-3.5" /> export markdown
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={downloadReportMarkdown}
+            className="inline-flex items-center gap-2 rounded-md border border-confirmed/50 bg-confirmed/10 px-4 py-2 font-mono text-xs uppercase tracking-widest text-confirmed hover:bg-confirmed/20"
+          >
+            <Download className="h-3.5 w-3.5" /> export markdown
+          </button>
+          <button
+            onClick={downloadEvidenceJson}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-background/50 px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground transition hover:border-confirmed/50 hover:text-confirmed"
+          >
+            <FileJson className="h-3.5 w-3.5" /> evidence json
+          </button>
+        </div>
       </div>
 
       <Panel accent="confirmed">
@@ -85,7 +227,7 @@ function ReportPage() {
               <p className="mt-1 text-muted-foreground">
                 Cross-corroborated by 5 independent sources: memory_netscan, disk_prefetch,
                 disk_amcache, timeline_mft, memory_malfind. MITRE T1071.001 · T1055 · T1547.001.
-                Confidence 0.99.
+                Confidence 0.93.
               </p>
             </li>
             <li>
@@ -96,7 +238,7 @@ function ReportPage() {
                 <span className="text-foreground">Registry persistence — HKCU\Run\Updater</span>
               </div>
               <p className="mt-1 text-muted-foreground">
-                disk_autoruns + disk_amcache SHA match. T1547.001. Confidence 0.97.
+                registry_autoruns + disk_amcache SHA match. T1547.001. Confidence 0.91.
               </p>
             </li>
             <li>
@@ -107,7 +249,8 @@ function ReportPage() {
                 <span className="text-foreground">PowerShell parent-child staging</span>
               </div>
               <p className="mt-1 text-muted-foreground">
-                evtx_4688 + disk_prefetch + ioc_keyword. T1059.001 · T1105.
+                windows_process_creation + disk_prefetch + yara_keyword_scan. T1059.001 · T1105.
+                Confidence 0.74.
               </p>
             </li>
           </ol>

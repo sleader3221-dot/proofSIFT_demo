@@ -10,17 +10,33 @@ const phases = [
   { id: "c2", label: "C2", status: "active", detail: "203.0.113.50:443" },
 ] as const;
 
+type ValidatorStage = "gap" | "resolving" | "complete";
+
+function formatClock(date: Date) {
+  return date.toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
 export function KillChainValidator() {
-  const [resolved, setResolved] = useState(false);
+  const [stage, setStage] = useState<ValidatorStage>("gap");
+  const [updatedAt, setUpdatedAt] = useState<string>("");
 
   useEffect(() => {
-    const resolve = window.setTimeout(() => setResolved(true), 2200);
-    const reset = window.setTimeout(() => setResolved(false), 6500);
-    return () => {
-      window.clearTimeout(resolve);
-      window.clearTimeout(reset);
+    const stages: ValidatorStage[] = ["gap", "resolving", "complete"];
+    let index = 0;
+    const applyStage = () => {
+      setStage(stages[index % stages.length]);
+      setUpdatedAt(formatClock(new Date()));
+      index += 1;
     };
-  }, [resolved]);
+
+    applyStage();
+    const id = window.setInterval(applyStage, 2400);
+    return () => {
+      window.clearInterval(id);
+    };
+  }, []);
+
+  const resolved = stage === "complete";
 
   return (
     <Panel
@@ -32,8 +48,10 @@ export function KillChainValidator() {
         {phases.map((phase, index) => {
           const isExecution = phase.id === "execution";
           const active =
-            phase.status === "active" || phase.status === "observed" || (isExecution && resolved);
-          const gap = isExecution && !resolved;
+            phase.status === "active" ||
+            phase.status === "observed" ||
+            (isExecution && stage !== "gap");
+          const gap = isExecution && stage === "gap";
           return (
             <div
               key={phase.id}
@@ -85,13 +103,24 @@ export function KillChainValidator() {
           )}
           <div>
             <div className={resolved ? "text-confirmed" : "text-inferred"}>
-              {resolved ? "CRITIC RESOLUTION COMPLETE" : "CRITIC ALERT: PRECEDING REQUIREMENT GAP"}
+              {resolved
+                ? "CRITIC RESOLUTION COMPLETE"
+                : stage === "resolving"
+                  ? "CRITIC COLLECTING EXECUTION PROOF"
+                  : "CRITIC ALERT: PRECEDING REQUIREMENT GAP"}
             </div>
             <div className="mt-1 text-muted-foreground">
               {resolved
-                ? "Execution proof found via disk_prefetch + Event 4688. Persistence and C2 are now sequence-valid."
-                : "C2 and Persistence are active, but Execution is flashing until corroborating evidence closes the sequence gap."}
+                ? "Execution proof found via disk_prefetch + windows_process_creation. Persistence and C2 are now sequence-valid."
+                : stage === "resolving"
+                  ? "Disk prefetch and process-creation evidence are being promoted into the sequence gate."
+                  : "C2 and Persistence are active, but Execution is flashing until corroborating evidence closes the sequence gap."}
             </div>
+            {updatedAt && (
+              <div className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                live update {updatedAt}
+              </div>
+            )}
           </div>
         </div>
       </div>

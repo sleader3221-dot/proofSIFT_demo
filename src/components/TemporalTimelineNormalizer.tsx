@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { Panel } from "@/components/Panel";
+import { clockDriftDetail } from "@/lib/proofsift-data";
 
 const timelineRows = ["Filesystem", "Event Log", "Network"] as const;
 
@@ -29,23 +30,24 @@ function formatOffset(seconds: number) {
 
 export function TemporalTimelineNormalizer() {
   const [normalized, setNormalized] = useState(false);
+  const rawEvtxOffset = clockDriftDetail.delta_seconds;
 
   const points = useMemo(() => {
-    const evtxOffset = normalized ? 0 : -120;
+    const evtxOffset = normalized ? 0 : rawEvtxOffset;
     return {
       netscan: [{ x: 0, y: 3, label: "Netscan", detail: "memory_netscan first_seen anchor" }],
       evtx: [
         {
           x: evtxOffset,
           y: 2,
-          label: normalized ? "EVTX aligned" : "EVTX raw -120s",
-          detail: "Event 4688 clock skew",
+          label: normalized ? "EVTX aligned" : `EVTX raw +${rawEvtxOffset}s`,
+          detail: "Event 4688 clock skew corrected against Netscan",
         },
       ],
       prefetch: [{ x: 180, y: 1, label: "Prefetch exec", detail: "EVIL.EXE execution cache" }],
       mft: [{ x: 480, y: 1, label: "MFT creation", detail: "created after execution: anomalous" }],
     } satisfies Record<string, TimelinePoint[]>;
-  }, [normalized]);
+  }, [normalized, rawEvtxOffset]);
 
   return (
     <Panel
@@ -158,7 +160,8 @@ export function TemporalTimelineNormalizer() {
       </div>
       <div className="mt-3 grid gap-3 text-xs md:grid-cols-2">
         <div className="rounded-md border border-confirmed/40 bg-confirmed/5 p-3 font-mono text-confirmed">
-          EVTX offset: {normalized ? "0s after normalization" : "-120s raw skew behind Netscan"}
+          EVTX offset:{" "}
+          {normalized ? "0s after normalization" : `+${rawEvtxOffset}s raw skew ahead of Netscan`}
         </div>
         <div className="flex items-start gap-2 rounded-md border border-blocked/50 bg-blocked/10 p-3 text-blocked">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
