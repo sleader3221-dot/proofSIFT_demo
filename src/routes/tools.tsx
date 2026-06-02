@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Panel } from "@/components/Panel";
+import { ProofsiftCliConsole } from "@/components/ProofsiftCliConsole";
 import { toolCatalog, cliCommands, configKnobs } from "@/lib/proofsift-data";
 import { cn } from "@/lib/utils";
 import {
@@ -172,6 +173,14 @@ function ToolsPage() {
           </div>
         </Panel>
       </div>
+
+      <Panel
+        title="live protected CLI"
+        subtitle="Browser command console with whitelisted ProofSIFT handlers"
+        accent="confirmed"
+      >
+        <ProofsiftCliConsole />
+      </Panel>
     </div>
   );
 }
