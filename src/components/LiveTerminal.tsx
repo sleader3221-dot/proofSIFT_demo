@@ -21,7 +21,14 @@ export function LiveTerminal() {
     let i = 0;
     setLines([]);
     const id = setInterval(() => {
-      setLines((prev) => [...prev, terminalScript[i]]);
+      const nextLine = terminalScript[i];
+      if (!nextLine) {
+        clearInterval(id);
+        setRunning(false);
+        return;
+      }
+
+      setLines((prev) => [...prev, nextLine]);
       i += 1;
       if (i >= terminalScript.length) {
         clearInterval(id);
@@ -76,7 +83,7 @@ export function LiveTerminal() {
             self-correcting investigator…
           </p>
         )}
-        {lines.map((l, idx) => (
+        {lines.filter(Boolean).map((l, idx) => (
           <div key={idx} className={cn("whitespace-pre", toneClass[l.tone ?? "dim"])}>
             {l.text || "\u00a0"}
           </div>
